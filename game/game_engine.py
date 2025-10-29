@@ -1,6 +1,7 @@
 import pygame
 from .paddle import Paddle
 from .ball import Ball
+import time
 
 # Initialize mixer and load sounds
 pygame.mixer.init()
@@ -72,3 +73,23 @@ class GameEngine:
         ai_text = self.font.render(str(self.ai_score), True, WHITE)
         screen.blit(player_text, (self.width//4, 20))
         screen.blit(ai_text, (self.width * 3//4, 20))
+
+    def check_game_over(self, screen):
+            """Check if any player reached 5 points and display winner."""
+            if self.player_score >= 5:
+                winner_text = self.font.render("Player Wins!", True, (255, 255, 255))
+                screen.blit(winner_text, (self.width // 2 - 180, self.height // 2 - 40))
+                pygame.display.flip()
+                self.game_over = True
+
+            elif self.ai_score >= 5:
+                winner_text = self.font.render("AI Wins!", True, (255, 255, 255))
+                screen.blit(winner_text, (self.width // 2 - 120, self.height // 2 - 40))
+                pygame.display.flip()
+                self.game_over = True
+
+            # If game over, delay for a few seconds before quitting
+            if self.game_over:
+                time.sleep(3)
+                pygame.quit()
+                quit()
