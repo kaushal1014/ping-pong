@@ -2,7 +2,11 @@ import pygame
 from .paddle import Paddle
 from .ball import Ball
 
-# Game Engine
+# Initialize mixer and load sounds
+pygame.mixer.init()
+PADDLE_HIT_SOUND = pygame.mixer.Sound("assets/paddle_hit.wav")
+WALL_BOUNCE_SOUND = pygame.mixer.Sound("assets/wall_bounce.wav")
+SCORE_SOUND = pygame.mixer.Sound("assets/score.wav")
 
 WHITE = (255, 255, 255)
 
@@ -30,25 +34,40 @@ class GameEngine:
 
     def update(self):
         self.ball.move()
-        self.ball.check_collision(self.player, self.ai)
 
+        # Wall bounce sound
+        if self.ball.y <= 0 or self.ball.y + self.ball.height >= self.height:
+            self.ball.velocity_y *= -1
+            WALL_BOUNCE_SOUND.play()
+
+        # Paddle collision
+        if self.ball.rect().colliderect(self.player.rect()):
+            self.ball.x = self.player.x + self.player.width
+            self.ball.velocity_x *= -1
+            PADDLE_HIT_SOUND.play()
+        elif self.ball.rect().colliderect(self.ai.rect()):
+            self.ball.x = self.ai.x - self.ball.width
+            self.ball.velocity_x *= -1
+            PADDLE_HIT_SOUND.play()
+
+        # Scoring and sound
         if self.ball.x <= 0:
             self.ai_score += 1
+            SCORE_SOUND.play()
             self.ball.reset()
         elif self.ball.x >= self.width:
             self.player_score += 1
+            SCORE_SOUND.play()
             self.ball.reset()
 
         self.ai.auto_track(self.ball, self.height)
 
     def render(self, screen):
-        # Draw paddles and ball
         pygame.draw.rect(screen, WHITE, self.player.rect())
         pygame.draw.rect(screen, WHITE, self.ai.rect())
         pygame.draw.ellipse(screen, WHITE, self.ball.rect())
         pygame.draw.aaline(screen, WHITE, (self.width//2, 0), (self.width//2, self.height))
 
-        # Draw score
         player_text = self.font.render(str(self.player_score), True, WHITE)
         ai_text = self.font.render(str(self.ai_score), True, WHITE)
         screen.blit(player_text, (self.width//4, 20))
